@@ -1,11 +1,13 @@
 use std::char;
 use std::collections::HashMap;
-use std::{fs::File, io::{BufRead, BufReader}, io};
+use std::fs::File;
+use std::io;
+use std::io::{BufRead, BufReader};
 use std::time::Instant;
 use rayon::prelude::*;
 // Current winrate 96.14%
 fn main() {
-    solve_wordle();
+    test_bot("aahed");
 }
 #[allow(dead_code)]
 fn solve_wordle() {
@@ -37,12 +39,12 @@ fn get_user_input(mut guess: String, wordlist: &Vec<String>) -> (String, String)
         println!("Results for {guess}:");
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("Failed to read line");
-        let input: String = input.trim().to_string();
+        let input: String = input.trim().to_lowercase();
         if input.len() == 8 && input.starts_with("or") {
             let new_guess = input[3..8].to_string();
             if wordlist.contains(&new_guess) { guess = new_guess; }
         }
-        else if input.len() == 5 { return (input, guess) }
+        else if input.len() == 5 && input.chars().all(|x| ['g', 'n', 'y'].contains(&x)) { return (input, guess) }
     }
 }
 // incatlets must be equal to ##### unless a leter is found, in which case it must be ##a##
@@ -74,46 +76,29 @@ fn filter_words(bannedlets: &Vec<char>, bannedatlets: &Vec<String>, mustinclets:
 }
 fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: Vec<String>) -> String {
     if narrowed_down_list.len() <= 2 { return narrowed_down_list.get(0).unwrap().clone() }
-    let mut wordcountpos: Vec<HashMap<char, i32>> = vec![HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()];
     let mut wordcount: HashMap<char, i32> = HashMap::new();
+    for c in 'a'..='z' { wordcount.insert(c, 0); }
     for word in &narrowed_down_list {
-        let chars: Vec<char> = word.chars().collect();
-        for i in 0..5 {
-            *wordcountpos[i].entry(chars[i]).or_insert(0) += 3;
-            *wordcount.entry(chars[i]).or_insert(0) += 1;
+        for char in word.chars() {
+            *wordcount.entry(char).or_insert(0) += 1;
         }
     }
-    let wordcountpos: Vec<HashMap<char, i32>> = wordcountpos.into_iter()
-        .map(|hm| hm.into_iter().filter(|(_, l)| *l < (narrowed_down_list.len() as i32 * 270 / 100)).collect())
-        .collect();
-    let wordcount: HashMap<char, i32> = wordcount.into_iter().filter(|(_, l)| *l < (narrowed_down_list.len() as i32 * 90 / 100)).collect();
-    String::from("crane")
+    for (_, v) in &mut wordcount { if *v >= narrowed_down_list.len() as i32 { *v = 0; } }
+    let mut wordscore: HashMap<String, i32> = HashMap::new();
+    for word in wordlist {
+        wordscore.insert(word.clone(), 0);
+        let mut seen: Vec<char> = vec![];
+        for char in word.chars() {
+            if !seen.contains(&char) {
+                *wordscore.entry(word.clone()).or_insert(0) += wordcount.get(&char).unwrap_or(&0);
+            }
+            seen.push(char);
+        }
+    }
+    let mut wordscore: Vec<(&String, &i32)> = wordscore.iter().collect();
+    wordscore.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
+    wordscore[0].0.to_string()
 }
-// fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: &Vec<String>) -> String {
-//     if narrowed_down_list.len() <= 2 { return narrowed_down_list.get(0).unwrap().clone() }
-//     let mut wordcount: HashMap<char, i32> = HashMap::new();
-//     for c in 'a'..='z' { wordcount.insert(c, 0); }
-//     for word in narrowed_down_list {
-//         for char in word.chars() {
-//             *wordcount.entry(char).or_insert(0) += 1;
-//         }
-//     }
-//     for (_, v) in &mut wordcount { if *v >= narrowed_down_list.len() as i32 { *v = 0; } } //println!("{k}: {v}"); }
-//     let mut wordscore: HashMap<String, i32> = HashMap::new();
-//     for word in wordlist {
-//         wordscore.insert(word.clone(), 0);
-//         let mut seen: Vec<char> = vec![];
-//         for char in word.chars() {
-//             if !seen.contains(&char) {
-//                 *wordscore.entry(word.clone()).or_insert(0) += wordcount.get(&char).unwrap_or(&0);
-//             }
-//             seen.push(char);
-//         }
-//     }
-//     let mut wordscore: Vec<(&String, &i32)> = wordscore.iter().collect();
-//     wordscore.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
-//     wordscore[0].0.to_string()
-// }
 fn get_words() -> Vec<String> {
     let mut words = vec![];
     let f = File::open("wordle-words.txt").expect("Failed to open file");
