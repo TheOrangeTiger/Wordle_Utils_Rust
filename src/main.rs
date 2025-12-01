@@ -7,7 +7,7 @@ use std::time::Instant;
 use rayon::prelude::*;
 // Current winrate 96.14%
 fn main() {
-    test_bot("aahed");
+    solve_wordle();
 }
 #[allow(dead_code)]
 fn solve_wordle() {
@@ -206,7 +206,7 @@ fn test_bot_allwords() {
             for i in 0..6 {
                 let input = get_guess_result(&word, &guess);
                 if input == "ggggg" { return 1; }
-                if i == 5 { return 0; }
+                if i == 5 { println!("Failed {word}"); return 0; }
                 (bannedlets, bannedatlets, mustinclets, incatlets) = lists_from_input(&guess, bannedlets, bannedatlets, mustinclets, incatlets, input);
                 let words = filter_words(&bannedlets, &bannedatlets, &mustinclets, &incatlets, &wordlist);
                 if words.len() == 0 { return 0; }
@@ -215,32 +215,6 @@ fn test_bot_allwords() {
             return 0;
         })
         .sum();
-    let win_percent = (wins as f64 / games as f64) * 100.0;
-    println!("Wins {:.2}% of the time\nTook {} mins {} secs", win_percent, start.elapsed().as_secs()/60, start.elapsed().as_secs()%60);
-}
-#[allow(dead_code)]
-fn test_bot_allwords_old() {
-    let start = Instant::now();
-    let allwords = get_words();
-    let games = allwords.len();
-    let mut wins: usize = 0;
-    for word in allwords {
-        let wordlist = get_words();
-        let mut bannedlets: Vec<char> = vec![];
-        let mut bannedatlets: Vec<String> = vec![String::new(), String::new(), String::new(), String::new(), String::new()];
-        let mut mustinclets: Vec<char> = vec![];
-        let mut incatlets: String = String::from("#####");
-        let mut guess= "crane".to_string();
-        for i in 0..6 {
-            let input = get_guess_result(&word, &guess);
-            if input == "ggggg" { wins += 1; break; }
-            if i == 5 { println!("Failed {word}"); break; }
-            (bannedlets, bannedatlets, mustinclets, incatlets) = lists_from_input(&guess, bannedlets, bannedatlets, mustinclets, incatlets, input);
-            let words = filter_words(&bannedlets, &bannedatlets, &mustinclets, &incatlets, &wordlist);
-            if words.len() == 0 { println!("Failed filtration for {word}"); break; }
-            guess = word_chooser(&wordlist, words);
-        }
-    }
     let win_percent = (wins as f64 / games as f64) * 100.0;
     println!("Wins {:.2}% of the time\nTook {} mins {} secs", win_percent, start.elapsed().as_secs()/60, start.elapsed().as_secs()%60);
 }
