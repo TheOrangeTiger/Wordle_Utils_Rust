@@ -3,15 +3,17 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
+// use dont_disappear; For release only
 use std::time::Instant;
 use rayon::prelude::*;
-// Current winrate 96.14%
+// Current winrate 97.42%
 fn main() {
     solve_wordle();
 }
 #[allow(dead_code)]
 fn solve_wordle() {
     let wordlist = get_words();
+    let mut no_guess: bool = false;
     let mut input: String;
     let mut bannedlets: Vec<char> = vec![];
     let mut bannedatlets: Vec<String> = vec![String::new(), String::new(), String::new(), String::new(), String::new()];
@@ -19,7 +21,7 @@ fn solve_wordle() {
     let mut incatlets: String = String::from("#####");
     let mut guess= "crane".to_string();
     for _ in 0..6 {
-        (input, guess) = get_user_input(guess, &wordlist);
+        (input, guess, no_guess) = get_user_input(guess, &wordlist, no_guess);
         (bannedlets, bannedatlets, mustinclets, incatlets) = lists_from_input(&guess, bannedlets, bannedatlets, mustinclets, incatlets, input);
         let words = filter_words(&bannedlets, &bannedatlets, &mustinclets, &incatlets, &wordlist);
         if words.len() == 1 {
@@ -33,8 +35,12 @@ fn solve_wordle() {
         else { println!("{} words left", words.len()); }
         guess = word_chooser(&wordlist, words)
     }
+    // dont_disappear::any_key_to_continue::default(); For release only
 }
-fn get_user_input(mut guess: String, wordlist: &Vec<String>) -> (String, String) {
+fn get_user_input(mut guess: String, wordlist: &Vec<String>, no_guess: bool) -> (String, String, bool) {
+    let mut ng = no_guess;
+    let old_guess = guess.clone();
+    if ng { guess = "-----".to_string(); }
     loop {
         println!("Results for {guess}:");
         let mut input = String::new();
@@ -43,8 +49,11 @@ fn get_user_input(mut guess: String, wordlist: &Vec<String>) -> (String, String)
         if input.len() == 8 && input.starts_with("or") {
             let new_guess = input[3..8].to_string();
             if wordlist.contains(&new_guess) { guess = new_guess; }
-        }
-        else if input.len() == 5 && input.chars().all(|x| ['g', 'n', 'y'].contains(&x)) { return (input, guess) }
+        } else if input.starts_with("fw") {
+            let new_input = format!("{}?", input[3..].to_string());
+           guess = word_chooser(&get_words(), vec![new_input])
+        } else if input == "ng" { ng = !ng; if !ng && guess == "-----".to_string() { guess = old_guess.clone() } }
+        else if guess != "-----".to_string() && input.len() == 5 && input.chars().all(|x| ['g', 'n', 'y'].contains(&x)) { return (input, guess, ng) }
     }
 }
 // incatlets must be equal to ##### unless a leter is found, in which case it must be ##a##
@@ -75,7 +84,8 @@ fn filter_words(bannedlets: &Vec<char>, bannedatlets: &Vec<String>, mustinclets:
     poswords
 }
 fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: Vec<String>) -> String {
-    if narrowed_down_list.len() <= 2 { return narrowed_down_list.get(0).unwrap().clone() }
+    let not_fw_mode = !(narrowed_down_list[0].chars().last() == Some('?'));
+    if narrowed_down_list.len() <= 2 && not_fw_mode { return narrowed_down_list.get(0).unwrap().clone() }
     let mut wordcount: HashMap<char, i32> = HashMap::new();
     for c in 'a'..='z' { wordcount.insert(c, 0); }
     for word in &narrowed_down_list {
@@ -83,7 +93,7 @@ fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: Vec<String>) -> Stri
             *wordcount.entry(char).or_insert(0) += 1;
         }
     }
-    for (_, v) in &mut wordcount { if *v >= narrowed_down_list.len() as i32 { *v = 0; } }
+    if not_fw_mode { for (_, v) in &mut wordcount { if *v >= narrowed_down_list.len() as i32 { *v = 0; } } }
     let mut wordscore: HashMap<String, i32> = HashMap::new();
     for word in wordlist {
         wordscore.insert(word.clone(), 0);
@@ -97,7 +107,8 @@ fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: Vec<String>) -> Stri
     }
     let mut wordscore: Vec<(&String, &i32)> = wordscore.iter().collect();
     wordscore.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
-    wordscore[0].0.to_string()
+    if wordscore[0].1 > &0 { return wordscore[0].0.to_string() }
+    narrowed_down_list.get(0).unwrap().clone()
 }
 fn get_words() -> Vec<String> {
     let mut words = vec![];
@@ -176,7 +187,7 @@ fn test_bot(word: &str) {
     let mut bannedatlets: Vec<String> = vec![String::new(), String::new(), String::new(), String::new(), String::new()];
     let mut mustinclets: Vec<char> = vec![];
     let mut incatlets: String = String::from("#####");
-    let mut guess= "crane".to_string();
+    let mut guess= "aeros".to_string();
     for i in 0..6 {
         let input = get_guess_result(&word, &guess);
         println!("Guess {}     {guess}\n            {input}\n------------------", i+1);
@@ -202,7 +213,7 @@ fn test_bot_allwords() {
             let mut bannedatlets: Vec<String> = vec![String::new(), String::new(), String::new(), String::new(), String::new()];
             let mut mustinclets: Vec<char> = vec![];
             let mut incatlets: String = String::from("#####");
-            let mut guess= "crane".to_string();
+            let mut guess= "aeros".to_string();
             for i in 0..6 {
                 let input = get_guess_result(&word, &guess);
                 if input == "ggggg" { return 1; }
