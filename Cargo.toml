@@ -1,8 +1,10 @@
 [package]
-name = "Wordle_Utils"
+name = "wordle_solver"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
-dont_disappear = "3.0.1"
-rayon = "1.11.0"
+wasm-bindgen = "0.2.117"
