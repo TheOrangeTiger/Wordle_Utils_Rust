@@ -37,8 +37,7 @@ fn solve_wordle() {
     }
     // dont_disappear::any_key_to_continue::default(); For release only
 }
-fn get_user_input(mut guess: String, wordlist: &Vec<String>, no_guess: bool) -> (String, String, bool) {
-    let mut ng = no_guess;
+fn get_user_input(mut guess: String, wordlist: &Vec<String>, mut ng: bool) -> (String, String, bool) {
     let old_guess = guess.clone();
     if ng { guess = "-----".to_string(); }
     loop {
@@ -51,7 +50,7 @@ fn get_user_input(mut guess: String, wordlist: &Vec<String>, no_guess: bool) -> 
             if wordlist.contains(&new_guess) { guess = new_guess; }
         } else if input.starts_with("fw") {
             let new_input = format!("{}?", input[3..].to_string());
-           guess = word_chooser(&get_words(), vec![new_input])
+            guess = word_chooser(&get_words(), vec![new_input])
         } else if input == "ng" { ng = !ng; if !ng && guess == "-----".to_string() { guess = old_guess.clone() } }
         else if guess != "-----".to_string() && input.len() == 5 && input.chars().all(|x| ['g', 'n', 'y'].contains(&x)) { return (input, guess, ng) }
     }
@@ -87,7 +86,6 @@ fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: Vec<String>) -> Stri
     let not_fw_mode = !(narrowed_down_list[0].chars().last() == Some('?'));
     if narrowed_down_list.len() <= 2 && not_fw_mode { return narrowed_down_list.get(0).unwrap().clone() }
     let mut wordcount: HashMap<char, i32> = HashMap::new();
-    for c in 'a'..='z' { wordcount.insert(c, 0); }
     for word in &narrowed_down_list {
         for char in word.chars() {
             *wordcount.entry(char).or_insert(0) += 1;
@@ -118,9 +116,11 @@ fn get_words() -> Vec<String> {
     words
 }
 fn lists_from_input(guess: &str, mut bannedlets: Vec<char>, mut bannedatlets: Vec<String>, mut mustinclets: Vec<char>, mut incatlets: String, input: String) -> (Vec<char>, Vec<String>, Vec<char>, String) {
+    let guess_chars: Vec<char> = guess.chars().collect();
+    let input_chars: Vec<char> = input.chars().collect();
     for i in 0..5 {
-        let guess_slice = guess.chars().nth(i).unwrap();
-        let input_slice = input.chars().nth(i).unwrap();
+        let guess_slice = guess_chars[i];
+        let input_slice = input_chars[i];
         if input_slice == 'n' {
             if mustinclets.contains(&guess_slice) {
                 bannedatlets.get_mut(i).unwrap().push(guess_slice);
