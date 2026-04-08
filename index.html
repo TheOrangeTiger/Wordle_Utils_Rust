@@ -21,10 +21,8 @@
         <tr>
             <td><button id="reset">Reset Wordle</button></td>
         </tr>
-        <tr>
-            <td><p id="status"></p></td>
-        </tr>
     </table>
+    <p id="status"></p>
     <p>
         To use, the bot will reccomend a guess, which you can change. Then give it the result of inputing the guess into Wordle. grey = n, yellow = y, green = g
     </p>
@@ -40,25 +38,24 @@
         let guess_number = 1;
         document.getElementById("guess_number").textContent = guess_number;
         document.getElementById("process_guess").onclick = () => {
-            if (document.getElementById("guess").value.lenth == 5 && document.getElementById("result").value.lenth == 5) {
+            const result = document.getElementById("result").value.toLowerCase();
+            const validresult = result.split('').every(c => c === 'g' || c === 'y' || c === 'n');
+            if (document.getElementById("guess").value.length == 5 && result.length == 5 && validresult) {
                 document.getElementById("status").textContent = "";
                 let lists_struct = lists_from_input_js(document.getElementById("guess").value.toLowerCase(), bannedlets, bannedatlets, mustinclets, incatlets, document.getElementById("result").value.toLowerCase());
                 bannedlets = lists_struct.get_bannedlets();
                 bannedatlets = lists_struct.get_bannedatlets();
                 mustinclets = lists_struct.get_mustinclets();
                 incatlets = lists_struct.get_incatlets();
-                document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
-                document.getElementById("result").value = "";
                 guess_number += 1;
-                if (guess_number > 6) {
+                if (guess_number > 6 || result === "ggggg") {
                     document.getElementById("reset").click();
                 }
                 document.getElementById("guess_number").textContent = guess_number;
-                if (incatlets == "ggggg") {
-                    document.getElementById("reset").click();
-                }
+                document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
+                document.getElementById("result").value = "";
             } else {
-                document.getElementById("status").textContent = "Invalid guess length, only inputs with the length of 5 are supported at the moment";
+                document.getElementById("status").textContent = "Invalid guess length, only inputs with the length of 5 and that are comprised of soley 'n's 'g's and 'y's are supported at the moment";
             }
         };
         document.getElementById("reset").onclick = () => {
