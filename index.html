@@ -39,7 +39,6 @@
         let incatlets = "#####";
         let guess_number = 1;
         document.getElementById("guess_number").textContent = guess_number;
-        // wordlist: Vec<String>, bannedlets: String, bannedatlets: Vec<String>, mustinclets: String, incatlets: String
         document.getElementById("process_guess").onclick = () => {
             let lists_struct = lists_from_input_js(document.getElementById("guess").value, bannedlets, bannedatlets, mustinclets, incatlets, document.getElementById("result").value);
             bannedlets = lists_struct.get_bannedlets();
@@ -49,7 +48,13 @@
             document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
             document.getElementById("result").value = "";
             guess_number += 1;
+            if (guess_number > 6) {
+                document.getElementById("reset").click();
+            }
             document.getElementById("guess_number").textContent = guess_number;
+            if (incatlets = "ggggg") {
+                document.getElementById("reset").click();
+            }
         };
         document.getElementById("reset").onclick = () => {
             bannedlets = "";
