@@ -50,6 +50,7 @@
                 guess_number += 1;
                 if (guess_number > 6 || result === "ggggg") {
                     document.getElementById("reset").click();
+                    return;
                 }
                 document.getElementById("guess_number").textContent = guess_number;
                 document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
