@@ -1,0 +1,15 @@
+{
+  "name": "wordle_solver",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "wordle_solver_bg.wasm",
+    "wordle_solver.js",
+    "wordle_solver.d.ts"
+  ],
+  "main": "wordle_solver.js",
+  "types": "wordle_solver.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
