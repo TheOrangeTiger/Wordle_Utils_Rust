@@ -40,23 +40,29 @@
         let guess_number = 1;
         document.getElementById("guess_number").textContent = guess_number;
         document.getElementById("process_guess").onclick = () => {
-            let lists_struct = lists_from_input_js(document.getElementById("guess").value, bannedlets, bannedatlets, mustinclets, incatlets, document.getElementById("result").value);
-            bannedlets = lists_struct.get_bannedlets();
-            bannedatlets = lists_struct.get_bannedatlets();
-            mustinclets = lists_struct.get_mustinclets();
-            incatlets = lists_struct.get_incatlets();
-            document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
-            document.getElementById("result").value = "";
-            guess_number += 1;
-            if (guess_number > 6) {
-                document.getElementById("reset").click();
-            }
-            document.getElementById("guess_number").textContent = guess_number;
-            if (incatlets = "ggggg") {
-                document.getElementById("reset").click();
+            if (document.getElementById("guess").value.lenth == 5 && document.getElementById("result").value.lenth == 5) {
+                document.getElementById("status").textContent = "";
+                let lists_struct = lists_from_input_js(document.getElementById("guess").value.toLowerCase(), bannedlets, bannedatlets, mustinclets, incatlets, document.getElementById("result").value.toLowerCase());
+                bannedlets = lists_struct.get_bannedlets();
+                bannedatlets = lists_struct.get_bannedatlets();
+                mustinclets = lists_struct.get_mustinclets();
+                incatlets = lists_struct.get_incatlets();
+                document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
+                document.getElementById("result").value = "";
+                guess_number += 1;
+                if (guess_number > 6) {
+                    document.getElementById("reset").click();
+                }
+                document.getElementById("guess_number").textContent = guess_number;
+                if (incatlets == "ggggg") {
+                    document.getElementById("reset").click();
+                }
+            } else {
+                document.getElementById("status").textContent = "Invalid guess length, only inputs with the length of 5 are supported at the moment";
             }
         };
         document.getElementById("reset").onclick = () => {
+            document.getElementById("status").textContent = "";
             document.getElementById("guess").value = "crane";
             bannedlets = "";
             bannedatlets = ["", "", "", "", ""];
