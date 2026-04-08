@@ -20,6 +20,7 @@ jobs:
         run: |
           mkdir dist
           cp index.html dist/
+          cp style.css dist/
           rm pkg/.gitignore
           cp -r pkg dist/
       - name: Deploy to GitHub Pages
