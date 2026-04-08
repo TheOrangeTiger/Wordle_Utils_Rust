@@ -1,10 +1,63 @@
 <!DOCTYPE html>
 <html>
     <title>Wordle Solver</title>
+    <h1>Wordle Solver</h1>
+    <table>
+        <tr>
+            <td>On guess #</td>
+            <td id="guess_number"></td>
+        </tr>
+        <tr>
+            <td>Guess: </td>
+            <td><input id="guess" value="crane"/></td>
+        </tr>
+        <tr>
+            <td>Result: </td>
+            <td><input id="result" /></td>
+        </tr>
+        <tr>
+            <td><button id="process_guess">Process Guess</button></td>
+        </tr>
+        <tr>
+            <td><button id="reset">Reset Wordle</button></td>
+        </tr>
+        <tr>
+            <td><p id="status"></p></td>
+        </tr>
+    </table>
+    <p>
+        To use, the bot will reccomend a guess, which you can change. Then give it the result of inputing the guess into Wordle. grey = n, yellow = y, green = g
+    </p>
     <script type="module">
-        import init, {suggest_guess} from './pkg/wordle_solver.js';
+        import init, {suggest_guess, get_words, lists_from_input_js, init_panic_hook} from './pkg/wordle_solver.js';
         await init();
-
+        init_panic_hook();
+        const wordlist = get_words();
+        let bannedlets = "";
+        let bannedatlets = ["", "", "", "", ""];
+        let mustinclets = "";
+        let incatlets = "#####";
+        let guess_number = 1;
+        document.getElementById("guess_number").textContent = guess_number;
+        // wordlist: Vec<String>, bannedlets: String, bannedatlets: Vec<String>, mustinclets: String, incatlets: String
+        document.getElementById("process_guess").onclick = () => {
+            let lists_struct = lists_from_input_js(document.getElementById("guess").value, bannedlets, bannedatlets, mustinclets, incatlets, document.getElementById("result").value);
+            bannedlets = lists_struct.get_bannedlets();
+            bannedatlets = lists_struct.get_bannedatlets();
+            mustinclets = lists_struct.get_mustinclets();
+            incatlets = lists_struct.get_incatlets();
+            document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
+            document.getElementById("result").value = "";
+            guess_number += 1;
+            document.getElementById("guess_number").textContent = guess_number;
+        };
+        document.getElementById("reset").onclick = () => {
+            bannedlets = "";
+            bannedatlets = ["", "", "", "", ""];
+            mustinclets = "";
+            incatlets = "#####";
+            guess_number = 1;
+            document.getElementById("guess_number").textContent = guess_number;
+        }
     </script>
-    <h1>WIP</h1>
 </html>

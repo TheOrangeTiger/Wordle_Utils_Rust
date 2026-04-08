@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::fs::File;
 use std::io;
-use std::io::{BufRead, BufReader};
 use wasm_bindgen::prelude::*;
 // use dont_disappear; For release only
 // use std::time::Instant;
@@ -9,10 +7,12 @@ use wasm_bindgen::prelude::*;
 // Current winrate 97.42%
 const WORDS: &str = include_str!("../wordle-words.txt");
 #[wasm_bindgen]
-pub fn suggest_guess(guess: String, input: String, bannedlets: String, bannedatlets: Vec<String>, mustinclets: String, incatlets: String) -> String {
-    let wordlist = get_words();
-    let (bannedlets, bannedatlets, mustinclets, incatlets) = lists_from_input(&guess, bannedlets.chars().collect(), bannedatlets, mustinclets.chars().collect(), incatlets, input);
-    let words = filter_words(&bannedlets, &bannedatlets, &mustinclets, &incatlets, &wordlist);
+pub fn init_panic_hook() {
+    console_error_panic_hook::set_once();
+}
+#[wasm_bindgen]
+pub fn suggest_guess(wordlist: Vec<String>, bannedlets: String, bannedatlets: Vec<String>, mustinclets: String, incatlets: String) -> String {
+    let words = filter_words(&bannedlets.chars().collect(), &bannedatlets, &mustinclets.chars().collect(), &incatlets, &wordlist);
     if words.len() == 1 {
         return words[0].clone()
     }
@@ -22,7 +22,7 @@ pub fn suggest_guess(guess: String, input: String, bannedlets: String, bannedatl
 }
 #[allow(dead_code)]
 pub fn solve_wordle_binary() {
-    let wordlist = get_words_binary();
+    let wordlist = get_words();
     let mut no_guess: bool = false;
     let mut input: String;
     let mut bannedlets: Vec<char> = vec![];
@@ -118,19 +118,34 @@ fn word_chooser(wordlist: &Vec<String>, narrowed_down_list: Vec<String>) -> Stri
     if wordscore[0].1 > &0 { return wordscore[0].0.to_string() }
     narrowed_down_list.get(0).unwrap().clone()
 }
-fn get_words() -> Vec<String> {
+#[wasm_bindgen]
+pub fn get_words() -> Vec<String> {
     let mut wordlist = vec![];
     for word in WORDS.to_string().lines() {
         wordlist.push(word.to_string());
     }
     wordlist
 }
-fn get_words_binary() -> Vec<String> {
-    let mut words = vec![];
-    let f = File::open("wordle-words.txt").expect("Failed to open file");
-    let wordstemp = BufReader::new(f);
-    for word in wordstemp.lines() { words.push(word.unwrap()); }
-    words
+#[wasm_bindgen]
+#[allow(dead_code)]
+pub struct ListJsOutput {
+    // (bannedlets, bannedatlets, mustinclets, incatlets)
+    bannedlets: String,
+    bannedatlets: Vec<String>,
+    mustinclets: String,
+    incatlets: String
+}
+#[wasm_bindgen]
+impl ListJsOutput {
+    pub fn get_bannedlets(&self) -> String { self.bannedlets.clone() }
+    pub fn get_bannedatlets(&self) -> Vec<String> { self.bannedatlets.clone() }
+    pub fn get_mustinclets(&self) -> String { self.mustinclets.clone() }
+    pub fn get_incatlets(&self) -> String { self.incatlets.clone() }
+}
+#[wasm_bindgen]
+pub fn lists_from_input_js(guess: &str, bannedlets: String, bannedatlets: Vec<String>, mustinclets: String, incatlets: String, input: String) -> ListJsOutput {
+    let (bannedlets, bannedatlets, mustinclets, incatlets) = lists_from_input(guess, bannedlets.chars().collect(), bannedatlets, mustinclets.chars().collect(), incatlets, input);
+    ListJsOutput { bannedlets: bannedlets.iter().collect(), bannedatlets, mustinclets: mustinclets.iter().collect(), incatlets }
 }
 fn lists_from_input(guess: &str, mut bannedlets: Vec<char>, mut bannedatlets: Vec<String>, mut mustinclets: Vec<char>, mut incatlets: String, input: String) -> (Vec<char>, Vec<String>, Vec<char>, String) {
     let guess_chars: Vec<char> = guess.chars().collect();
