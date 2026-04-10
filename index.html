@@ -38,6 +38,11 @@
         let incatlets = "#####";
         let guess_number = 1;
         document.getElementById("guess_number").textContent = guess_number;
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                document.getElementById("process_guess").click();
+            }
+        });
         document.getElementById("process_guess").onclick = () => {
             const result = document.getElementById("result").value.toLowerCase();
             const validresult = result.split('').every(c => c === 'g' || c === 'y' || c === 'n');
@@ -56,6 +61,7 @@
                 document.getElementById("guess_number").textContent = guess_number;
                 document.getElementById("guess").value = suggest_guess(wordlist, bannedlets, bannedatlets, mustinclets, incatlets);
                 document.getElementById("result").value = "";
+                document.getElementById("result").focus();
             } else {
                 document.getElementById("status").textContent = "Invalid guess length, only inputs with the length of 5 and that are comprised of soley 'n's 'g's and 'y's are supported at the moment";
             }
