@@ -4,8 +4,17 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
+path = "src/logic.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
 console_error_panic_hook = "0.1.7"
+rustc-hash = "2.1.2"
 wasm-bindgen = "0.2.117"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dont_disappear = "3.0.1"
+rayon = "1.12.0"
+
+[profile.release]
+debug = true
